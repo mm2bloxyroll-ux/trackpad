@@ -49,8 +49,20 @@ struct ScaleView: View {
                             .opacity(viewModel.hasTouch ? 0 : 1)
                             .animation(.easeInOut(duration: 0.5), value: viewModel.hasTouch)
                     }
+                    }
                     .frame(height: max(geometry.size.height * 0.15, 80)) // Fixed height for title + subtitle
                     .frame(maxWidth: .infinity) // Ensure full width for centering
+                    .overlay(alignment: .topTrailing) {
+                        Picker("Unit", selection: $viewModel.selectedUnit) {
+                            ForEach(MeasurementUnit.allCases) { unit in
+                                Text(unit.rawValue.capitalized).tag(unit)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 120)
+                        .padding(.top, 10)
+                        .padding(.trailing, 20)
+                    }
                     
                     Spacer()
                     
@@ -62,7 +74,8 @@ struct ScaleView: View {
                             hasTouch: viewModel.hasTouch,
                             compression: $scaleCompression,
                             displayShake: $displayShake,
-                            scaleFactor: min(geometry.size.width / 700, geometry.size.height / 500)
+                            scaleFactor: min(geometry.size.width / 700, geometry.size.height / 500),
+                            viewModel: viewModel
                         )
                         Spacer()
                     }
@@ -72,7 +85,7 @@ struct ScaleView: View {
                     // Fixed container for button to prevent jumping
                     VStack(spacing: 10) {
                         if viewModel.hasTouch {
-                            Text("Press spacebar or click to zero")
+                            Text("Press spacebar or click to tare")
                                 .font(.system(size: min(max(geometry.size.width * 0.018, 12), 16), weight: .medium))
                                 .foregroundStyle(.gray)
                         }
@@ -83,7 +96,7 @@ struct ScaleView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "arrow.clockwise")
                                     .font(.system(size: min(max(geometry.size.width * 0.02, 14), 18), weight: .semibold))
-                                Text("Zero Scale")
+                                Text("Tare")
                                     .font(.system(size: min(max(geometry.size.width * 0.02, 14), 18), weight: .semibold))
                             }
                             .foregroundStyle(.white)
@@ -154,6 +167,7 @@ struct CartoonScaleView: View {
     @Binding var compression: CGFloat
     @Binding var displayShake: Bool
     let scaleFactor: CGFloat
+    @ObservedObject var viewModel: ScaleViewModel // Pass viewModel to access selectedUnit
     
     var body: some View {
         VStack(spacing: 0) {
@@ -212,7 +226,7 @@ struct CartoonScaleView: View {
                         .shadow(color: .teal, radius: hasTouch ? 2 : 0)
                         .animation(.easeInOut(duration: 0.2), value: weight)
                     
-                    Text("grams")
+                    Text(viewModel.selectedUnit.displayName)
                         .font(.system(size: 12 * scaleFactor, weight: .medium))
                         .foregroundStyle(.white.opacity(0.8))
                 }
