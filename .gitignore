@@ -23,3 +23,9 @@ build/
 .secrets
 
 local_build/
+
+# Next.js (web/)
+web/.next/
+web/node_modules/
+web/.env*.local
+web/out/
