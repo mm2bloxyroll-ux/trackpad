@@ -15,6 +15,10 @@ struct TrackWeightApp: App {
         WindowGroup {
             ContentView()
         }
+        .defaultSize(
+            width: AppLayout.defaultWidth,
+            height: AppLayout.defaultHeight
+        )
     }
 }
 

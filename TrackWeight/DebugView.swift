@@ -2,8 +2,6 @@
 //  DebugView.swift
 //  TrackWeight
 //
-//  Created by Takuto Nakamura on 2024/03/02.
-//
 
 import OpenMultitouchSupport
 import SwiftUI
@@ -13,80 +11,73 @@ struct DebugView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack {
-            // Header with close button
-            HStack {
-                Text("Debug Console")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                
-                Spacer()
-                
-                Button(action: {
-                    dismiss()
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(PlainButtonStyle())
-                .help("Close Debug Console")
-            }
-            .padding(.bottom)
+        ZStack {
+            GlassBackground()
 
-            // Device Selector
-            if !viewModel.availableDevices.isEmpty {
-                VStack(alignment: .leading) {
-                    Text("Trackpad Device:")
-                        .font(.headline)
-                    Picker("Select Device", selection: Binding(
-                        get: { viewModel.selectedDevice },
-                        set: { device in
-                            if let device = device {
-                                viewModel.selectDevice(device)
+            VStack(spacing: 20) {
+                HStack {
+                    Text("Debug Console")
+                        .font(.title2.weight(.bold))
+                        .accentGradientForeground()
+
+                    Spacer()
+
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
+                    .buttonStyle(.plain)
+                    .help("Close Debug Console")
+                }
+
+                if !viewModel.availableDevices.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Trackpad Device")
+                            .font(.headline)
+                            .foregroundStyle(.white.opacity(0.85))
+
+                        Picker("Select Device", selection: Binding(
+                            get: { viewModel.selectedDevice },
+                            set: { device in
+                                if let device = device {
+                                    viewModel.selectDevice(device)
+                                }
+                            }
+                        )) {
+                            ForEach(viewModel.availableDevices, id: \.self) { device in
+                                Text("\(device.deviceName) (ID: \(device.deviceID))")
+                                    .tag(device as OMSDeviceInfo?)
                             }
                         }
-                    )) {
-                        ForEach(viewModel.availableDevices, id: \.self) { device in
-                            Text("\(device.deviceName) (ID: \(device.deviceID))")
-                                .tag(device as OMSDeviceInfo?)
-                        }
+                        .pickerStyle(.menu)
+                        .tint(.white)
                     }
-                    .pickerStyle(MenuPickerStyle())
+                    .padding(20)
+                    .glassCard(cornerRadius: 16)
                 }
-                .padding(.bottom)
+
+                if viewModel.isListening {
+                    Button { viewModel.stop() } label: { Text("Stop") }
+                        .buttonStyle(GlassPrimaryButtonStyle())
+                } else {
+                    Button { viewModel.start() } label: { Text("Start") }
+                        .buttonStyle(GlassPrimaryButtonStyle())
+                }
+
+                Canvas { context, size in
+                    viewModel.touchData.forEach { touch in
+                        let path = makeEllipse(touch: touch, size: size)
+                        context.fill(path, with: .color(.cyan.opacity(Double(touch.total))))
+                    }
+                }
+                .frame(width: 600, height: 400)
+                .glassCard(cornerRadius: 16)
             }
-            
-            if viewModel.isListening {
-                Button {
-                    viewModel.stop()
-                } label: {
-                    Text("Stop")
-                }
-            } else {
-                Button {
-                    viewModel.start()
-                } label: {
-                    Text("Start")
-                }
-            }
-            Canvas { context, size in
-                viewModel.touchData.forEach { touch in
-                    let path = makeEllipse(touch: touch, size: size)
-                    context.fill(path, with: .color(.primary.opacity(Double(touch.total))))
-                }
-            }
-            .frame(width: 600, height: 400)
-            .border(Color.primary)
+            .padding(28)
         }
-        .fixedSize()
-        .padding()
-        .onAppear {
-            viewModel.onAppear()
-        }
-        .onDisappear {
-            viewModel.onDisappear()
-        }
+        .onAppear { viewModel.onAppear() }
+        .onDisappear { viewModel.onDisappear() }
     }
 
     private func makeEllipse(touch: OMSTouchData, size: CGSize) -> Path {
@@ -104,4 +95,5 @@ struct DebugView: View {
 
 #Preview {
     DebugView()
+        .frame(width: 700, height: 500)
 }

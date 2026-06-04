@@ -7,42 +7,59 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var showHomePage = true
-    @State private var selectedTab = 1 // Start with Scale tab (index 1)
-    
+    @State private var selectedTab = 1
+
     var body: some View {
-        if showHomePage {
-            HomeView {
-                showHomePage = false
+        Group {
+            if showHomePage {
+                HomeView {
+                    withAnimation(.easeInOut(duration: 0.45)) {
+                        showHomePage = false
+                    }
+                }
+            } else {
+                mainTabs
             }
-            .frame(minWidth: 700, minHeight: 500)
-        } else {
+        }
+        .frame(
+            minWidth: AppLayout.windowMinWidth,
+            minHeight: AppLayout.windowMinHeight
+        )
+        .preferredColorScheme(.dark)
+    }
+
+    private var mainTabs: some View {
+        ZStack {
+            GlassBackground()
+
             TabView(selection: $selectedTab) {
                 TrackWeightView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tabItem {
                         Image(systemName: "arrow.3.trianglepath")
-                        Text("Guided (Experimental)")
+                        Text("Guided")
                     }
                     .tag(0)
-                
+
                 ScaleView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tabItem {
                         Image(systemName: "scalemass")
                         Text("Scale")
                     }
                     .tag(1)
-                
+
                 SettingsView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tabItem {
                         Image(systemName: "gearshape")
                         Text("Settings")
                     }
                     .tag(2)
             }
-            .frame(minWidth: 700, minHeight: 500)
         }
     }
 }
-
 
 #Preview {
     ContentView()
