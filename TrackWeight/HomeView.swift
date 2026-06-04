@@ -7,127 +7,131 @@ import SwiftUI
 
 struct HomeView: View {
     let onBegin: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 40) {
-            Spacer()
-            
-            // Title section
-            VStack(spacing: 15) {
-                Image(systemName: "scalemass")
-                    .font(.system(size: 80, weight: .ultraLight))
-                    .foregroundStyle(Color.blue)
-                
-                Text("TrackWeight")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .teal, .cyan],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-            }
-            
-            // Description section
-            VStack(spacing: 20) {
-                Text("Transform your MacBook trackpad into a precision scale using Apple's private MultitouchSupport framework to read pressure values with gram-level accuracy.")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(Color.primary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 550)
-                
-                // Limitations section
-                VStack(spacing: 12) {
-                    Text("Important Limitations")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.orange)
-                    
-                    VStack(spacing: 8) {
-                        LimitationRow(
-                            icon: "hand.point.up.left",
-                            text: "Requires finger contact for capacitive detection"
-                        )
-                        LimitationRow(
-                            icon: "chart.line.downtrend.xyaxis",
-                            text: "May experience pressure drift when placing objects"
-                        )
-                        LimitationRow(
-                            icon: "cube.fill",
-                            text: "Metal/magnetic objects may not work"
-                        )
-                    }
-                }
-                .padding(.horizontal, 30)
-                .padding(.vertical, 20)
-                .background(
-                    RoundedRectangle(cornerRadius: 15)
-                        .foregroundColor(Color.orange.opacity(0.05))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 15)
-                                .stroke(Color.orange.opacity(0.2), lineWidth: 1)
-                        )
-                )
-                .frame(maxWidth: 500)
-            }
-            
-            Spacer()
-            
-            // Begin button
-            Button(action: onBegin) {
-                HStack(spacing: 10) {
-                    Text("Begin")
-                        .font(.system(size: 18, weight: .semibold))
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 16, weight: .semibold))
-                }
-                .foregroundStyle(Color.white)
-                .frame(width: 140, height: 50)
-                .background(
-                    RoundedRectangle(cornerRadius: 25)
-                        .fill(
-                            LinearGradient(
-                                colors: [.blue, .teal],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .shadow(color: .blue.opacity(0.3), radius: 10, x: 0, y: 5)
-                )
-            }
-            .buttonStyle(.plain)
-            .scaleEffect(1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: true)
-            .padding(.vertical, 10)
 
-            Spacer()
+    var body: some View {
+        ZStack {
+            GlassBackground()
+
+            GlassScreenFrame {
+                VStack(spacing: 0) {
+                    headerSection
+                        .padding(.bottom, AppLayout.sectionSpacing)
+
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: AppLayout.sectionSpacing) {
+                            descriptionSection
+                            limitationsSection
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    GlassFooterBar {
+                        Button(action: onBegin) {
+                            HStack(spacing: 10) {
+                                Text("Begin")
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 15, weight: .semibold))
+                            }
+                        }
+                        .buttonStyle(GlassPrimaryButtonStyle())
+                    }
+                    .padding(.top, 8)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, 40)
+    }
+
+    private var headerSection: some View {
+        VStack(spacing: 16) {
+            GlassIconBadge(systemName: "scalemass", size: 72)
+
+            Text("TrackWeight")
+                .font(.system(size: 44, weight: .bold, design: .rounded))
+                .accentGradientForeground()
+                .multilineTextAlignment(.center)
+
+            Text("Precision scale for your MacBook trackpad")
+                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.55))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var descriptionSection: some View {
+        Text("Transform your MacBook trackpad into a precision scale with gram-level pressure readings.")
+            .font(.system(size: 16, weight: .medium, design: .rounded))
+            .foregroundStyle(.white.opacity(0.85))
+            .multilineTextAlignment(.center)
+            .lineSpacing(4)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 20)
+            .glassCard(cornerRadius: 16, tint: .cyan, borderTint: .cyan)
+    }
+
+    private var limitationsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Important Limitations")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [Color.orange, Color(red: 1, green: 0.75, blue: 0.4)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 12) {
+                LimitationRow(
+                    icon: "hand.point.up.left",
+                    text: "Requires finger contact for capacitive detection"
+                )
+                LimitationRow(
+                    icon: "chart.line.downtrend.xyaxis",
+                    text: "May experience pressure drift when placing objects"
+                )
+                LimitationRow(
+                    icon: "cube.fill",
+                    text: "Metal or magnetic objects may not work reliably"
+                )
+            }
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard(cornerRadius: 18, tint: .orange, borderWidth: 2, borderTint: .orange)
     }
 }
 
 struct LimitationRow: View {
     let icon: String
     let text: String
-    
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .top, spacing: 14) {
             Image(systemName: icon)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color.orange)
-                .frame(width: 20)
-            
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color.orange.opacity(0.95))
+                .frame(width: 22, alignment: .center)
+                .padding(.top, 2)
+
             Text(text)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color.secondary)
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.78))
                 .multilineTextAlignment(.leading)
-            
-            Spacer()
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
 
 #Preview {
     HomeView(onBegin: {})
+        .frame(width: 760, height: 600)
+        .preferredColorScheme(.dark)
 }

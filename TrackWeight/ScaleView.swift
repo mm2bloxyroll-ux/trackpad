@@ -9,110 +9,69 @@ struct ScaleView: View {
     @StateObject private var viewModel = ScaleViewModel()
     @State private var scaleCompression: CGFloat = 0
     @State private var displayShake = false
-    @State private var particleOffset: CGFloat = 0
     @State private var keyMonitor: Any?
-    
+
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                // Animated gradient background
-//                    LinearGradient(
-//                        colors: [
-//                            Color(red: 0.95, green: 0.97, blue: 1.0),
-//                            Color(red: 0.85, green: 0.92, blue: 0.98)
-//                        ],
-//                        startPoint: .topLeading,
-//                        endPoint: .bottomTrailing
-//                    )
-//                    .ignoresSafeArea()
-                
-                VStack(spacing: geometry.size.height * 0.06) {
-                    // Title with subtitle directly underneath
+            let scaleFactor = min(geometry.size.width / 760, geometry.size.height / 560)
+
+            GlassScreenFrame {
+                VStack(spacing: 0) {
                     VStack(spacing: 8) {
                         Text("Track Weight")
-                            .font(.system(size: min(max(geometry.size.width * 0.05, 24), 42), weight: .bold, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.blue, .teal, .cyan],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .minimumScaleFactor(0.7)
-                            .lineLimit(1)
-                        
-                        Text("Place your finger on the trackpad to begin")
-                            .font(.system(size: min(max(geometry.size.width * 0.022, 14), 18), weight: .medium))
-                            .foregroundStyle(.gray)
+                            .font(.system(size: min(max(28, geometry.size.width * 0.04), 36), weight: .bold, design: .rounded))
+                            .accentGradientForeground()
                             .multilineTextAlignment(.center)
-                            .frame(maxWidth: geometry.size.width * 0.8)
+
+                        Text("Place your finger on the trackpad to begin")
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.55))
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity)
                             .opacity(viewModel.hasTouch ? 0 : 1)
                             .animation(.easeInOut(duration: 0.5), value: viewModel.hasTouch)
                     }
-                    .frame(height: max(geometry.size.height * 0.15, 80)) // Fixed height for title + subtitle
-                    .frame(maxWidth: .infinity) // Ensure full width for centering
-                    
-                    Spacer()
-                    
-                    // Cartoon Digital Scale - responsive size
-                    HStack {
-                        Spacer()
-                        CartoonScaleView(
-                            weight: viewModel.currentWeight,
-                            hasTouch: viewModel.hasTouch,
-                            compression: $scaleCompression,
-                            displayShake: $displayShake,
-                            scaleFactor: min(geometry.size.width / 700, geometry.size.height / 500)
-                        )
-                        Spacer()
-                    }
-                    
-                    Spacer()
-                    
-                    // Fixed container for button to prevent jumping
-                    VStack(spacing: 10) {
-                        if viewModel.hasTouch {
-                            Text("Press spacebar or click to zero")
-                                .font(.system(size: min(max(geometry.size.width * 0.018, 12), 16), weight: .medium))
-                                .foregroundStyle(.gray)
-                        }
-                        
-                        Button(action: {
-                            viewModel.zeroScale()
-                        }) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "arrow.clockwise")
-                                    .font(.system(size: min(max(geometry.size.width * 0.02, 14), 18), weight: .semibold))
-                                Text("Zero Scale")
-                                    .font(.system(size: min(max(geometry.size.width * 0.02, 14), 18), weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 16)
+
+                    Spacer(minLength: 12)
+
+                    CartoonScaleView(
+                        weight: viewModel.currentWeight,
+                        hasTouch: viewModel.hasTouch,
+                        compression: $scaleCompression,
+                        displayShake: $displayShake,
+                        scaleFactor: scaleFactor
+                    )
+
+                    Spacer(minLength: 12)
+
+                    GlassFooterBar {
+                        VStack(spacing: 10) {
+                            if viewModel.hasTouch {
+                                Text("Press spacebar or click to zero")
+                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.5))
                             }
-                            .foregroundStyle(.white)
-                            .frame(width: min(max(geometry.size.width * 0.2, 140), 180), 
-                                   height: min(max(geometry.size.height * 0.08, 40), 55))
-                            .background(
-                                RoundedRectangle(cornerRadius: 25)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [.blue, .teal],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                            )
+
+                            Button(action: { viewModel.zeroScale() }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "arrow.clockwise")
+                                    Text("Zero Scale")
+                                }
+                            }
+                            .buttonStyle(GlassPrimaryButtonStyle())
+                            .opacity(viewModel.hasTouch ? 1 : 0)
+                            .scaleEffect(viewModel.hasTouch ? 1 : 0.85)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.hasTouch)
                         }
-                        .buttonStyle(.plain)
-                        .opacity(viewModel.hasTouch ? 1 : 0)
-                        .scaleEffect(viewModel.hasTouch ? 1 : 0.8)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.hasTouch)
                     }
-                    .frame(height: min(max(geometry.size.height * 0.15, 80), 100)) // Fixed space for button + instruction
-                    .frame(maxWidth: .infinity) // Ensure full width for centering
                 }
-                .padding(.horizontal, max(geometry.size.width * 0.05, 20))
-                .padding(.vertical, max(geometry.size.height * 0.03, 20))
-                .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure the VStack takes full available space
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .focusable()
         .modifier(FocusEffectModifier())
         .onChange(of: viewModel.currentWeight) { newWeight in
@@ -129,17 +88,16 @@ struct ScaleView: View {
             removeKeyMonitoring()
         }
     }
-    
+
     private func setupKeyMonitoring() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            // Space key code is 49
             if event.keyCode == 49 && viewModel.hasTouch {
                 viewModel.zeroScale()
             }
             return event
         }
     }
-    
+
     private func removeKeyMonitoring() {
         if let monitor = keyMonitor {
             NSEvent.removeMonitor(monitor)
@@ -154,122 +112,134 @@ struct CartoonScaleView: View {
     @Binding var compression: CGFloat
     @Binding var displayShake: Bool
     let scaleFactor: CGFloat
-    
+
     var body: some View {
         VStack(spacing: 0) {
-            // Scale platform (top) - responsive to weight
-            RoundedRectangle(cornerRadius: 8)
-                .fill(
-                    LinearGradient(
-                        colors: [.gray.opacity(0.3), .gray.opacity(0.6)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(Color.white.opacity(0.4), lineWidth: 1)
                 )
-                .frame(width: 200 * scaleFactor, height: 12 * scaleFactor)
+                .frame(width: 200 * scaleFactor, height: 14 * scaleFactor)
                 .offset(y: compression * 15)
-            
-            // Scale body
+                .shadow(color: Color.cyan.opacity(0.2), radius: 8, x: 0, y: 4)
+
             ZStack {
-                // Main body
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .background(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.18),
+                                        Color.cyan.opacity(0.08)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.6),
+                                        Color.white.opacity(0.15)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1.5
+                            )
+                    )
+                    .frame(width: 260 * scaleFactor, height: 160 * scaleFactor)
+                    .shadow(color: Color.black.opacity(0.35), radius: 24, x: 0, y: 14)
+
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color(red: 0.95, green: 0.95, blue: 0.97),
-                                Color(red: 0.85, green: 0.85, blue: 0.90)
+                                Color(red: 0.05, green: 0.12, blue: 0.22).opacity(0.9),
+                                Color(red: 0.08, green: 0.28, blue: 0.35).opacity(0.85)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 250 * scaleFactor, height: 150 * scaleFactor)
-                    .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 8)
-                
-                // Display screen
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.black)
-                    .frame(width: 180 * scaleFactor, height: 60 * scaleFactor)
-                    .offset(y: -10)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(
-                                LinearGradient(
-                                    colors: [.teal.opacity(0.8), .blue.opacity(0.6)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 176 * scaleFactor, height: 56 * scaleFactor)
-                            .offset(y: -10)
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.cyan.opacity(0.45), lineWidth: 1)
                     )
-                
-                // Weight display
+                    .frame(width: 188 * scaleFactor, height: 64 * scaleFactor)
+                    .offset(y: -12)
+                    .shadow(color: Color.cyan.opacity(hasTouch ? 0.5 : 0.15), radius: hasTouch ? 12 : 4)
+
                 VStack(spacing: 2) {
                     Text(String(format: "%.1f", weight))
-                        .font(.system(size: 32 * scaleFactor, weight: .bold, design: .monospaced))
+                        .font(.system(size: 34 * scaleFactor, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
-                        .shadow(color: .teal, radius: hasTouch ? 2 : 0)
-                        .animation(.easeInOut(duration: 0.2), value: weight)
-                    
+                        .shadow(color: Color.cyan.opacity(0.8), radius: hasTouch ? 8 : 0)
+
                     Text("grams")
-                        .font(.system(size: 12 * scaleFactor, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.8))
+                        .font(.system(size: 11 * scaleFactor, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.55))
+                        .tracking(0.8)
                 }
-                .offset(y: -10)
-                
-                // Status indicator - simple and clean
+                .offset(y: -12)
+
                 if hasTouch {
                     Circle()
-                        .fill(.teal)
+                        .fill(Color.cyan)
                         .frame(width: 8 * scaleFactor, height: 8 * scaleFactor)
-                        .offset(x: 90 * scaleFactor, y: -50 * scaleFactor)
+                        .shadow(color: .cyan, radius: 6)
+                        .offset(x: 95 * scaleFactor, y: -52 * scaleFactor)
                 }
-                
-                // Fun face on the scale - positioned below the display screen
+
                 VStack(spacing: 8 * scaleFactor) {
-                    // Eyes
                     HStack(spacing: 15 * scaleFactor) {
                         Circle()
-                            .fill(.black)
+                            .fill(.white.opacity(0.85))
                             .frame(width: 8 * scaleFactor, height: 8 * scaleFactor)
                         Circle()
-                            .fill(.black)
+                            .fill(.white.opacity(0.85))
                             .frame(width: 8 * scaleFactor, height: 8 * scaleFactor)
                     }
-                    
-                    // Responsive mouth expression
+
                     Group {
                         if hasTouch && weight > 5 {
-                            // Happy mouth when weighing something substantial
                             Path { path in
                                 path.move(to: CGPoint(x: 0, y: 0))
                                 path.addQuadCurve(to: CGPoint(x: 20, y: 0), control: CGPoint(x: 0, y: 15))
                             }
-                            .stroke(.black, lineWidth: 2 * scaleFactor)
+                            .stroke(Color.white.opacity(0.8), lineWidth: 2 * scaleFactor)
                             .frame(width: 20 * scaleFactor, height: 10 * scaleFactor)
                         } else {
-                            // Neutral mouth
-                            Rectangle()
-                                .fill(.black)
-                                .frame(width: 12 * scaleFactor, height: 2 * scaleFactor)
+                            Capsule()
+                                .fill(.white.opacity(0.5))
+                                .frame(width: 14 * scaleFactor, height: 2.5 * scaleFactor)
                         }
                     }
                     .animation(.easeInOut(duration: 0.3), value: weight > 5)
                 }
-                .offset(y: 60 * scaleFactor) // Position well below the display screen
+                .offset(y: 58 * scaleFactor)
             }
-            
-            // Scale legs
+
             HStack(spacing: 140 * scaleFactor) {
                 ForEach(0..<2, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(.gray.opacity(0.7))
-                        .frame(width: 12 * scaleFactor, height: 25 * scaleFactor)
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(Color.white.opacity(0.25), lineWidth: 0.5)
+                        )
+                        .frame(width: 14 * scaleFactor, height: 28 * scaleFactor)
                         .offset(y: compression * 3)
                 }
             }
-            .offset(y: -5)
+            .offset(y: -6)
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: compression)
     }
@@ -286,5 +256,9 @@ struct FocusEffectModifier: ViewModifier {
 }
 
 #Preview {
-    ScaleView()
+    ZStack {
+        GlassBackground()
+        ScaleView()
+    }
+    .frame(width: 700, height: 500)
 }
