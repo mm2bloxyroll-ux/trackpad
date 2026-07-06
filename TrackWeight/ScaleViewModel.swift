@@ -55,7 +55,7 @@ final class ScaleViewModel: ObservableObject {
         } else {
             hasTouch = true
             rawWeight = touchData.first?.pressure ?? 0.0
-            currentWeight = max(0, rawWeight - zeroOffset)
+            currentWeight = ( rawWeight - zeroOffset)
         }
     }
     
